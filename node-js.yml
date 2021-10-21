@@ -1,0 +1,40 @@
+name: NODE JS Check Build Publish (Frontend)
+
+on:
+  push:
+    branches:
+      - develop
+
+  workflow_dispatch:
+
+jobs:
+  node-build-test-package:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '14.x'
+  
+    - name: Cache Packages
+      uses: actions/cache@v2
+      with:
+        path: |
+          ui/node_modules
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package.json') }}
+
+    - name: NPM Dependencies
+      run: |
+        npm install
+    
+    # Add test-headless command in the package.json to run the headless test-coverage
+    #"test-headless": "ng test --watch=false --browsers=ChromeHeadless"
+    - name: NPM test
+      run:
+        npm run test-headless
+
+    # Dockerfile should be in the root directory of the project
+    - name: Package 
+      run: |
+        docker build -t npm-project:latest .
